@@ -1,8 +1,9 @@
+
 import urllib2
 import os, sys, re
 from bs4 import BeautifulSoup
 import codecs
-import markdown
+
 
 class WeipanDownloader:
     def __init__(self, link, dest):
@@ -18,7 +19,7 @@ class WeipanDownloader:
         destname = "%s/%s" % (destdir, name)
         if os.path.exists(destname) and os.path.isfile(destname) and os.path.getsize(destname) > 0:
             print name + '   exists, skip...'
-            return
+            
 
         html = ""
         done = -1
@@ -27,57 +28,65 @@ class WeipanDownloader:
             print "Downloading 2 %s" % name
             print link
 
-            #opener = urllib2.build_opener()
-            #opener.addheaders = [('User-Agent', 'Mozilla/5.0')]
-            #response = opener.open(link)
 
-            #resp = opener.open(link,timeout=600)
-            
-            #resp = urllib2.urlopen(link,timeout=600,headers={ 'User-Agent': 'Mozilla/5.0' })
             req = urllib2.Request(link, headers={'User-Agent':' Mozilla/5.0 (Windows NT 6.1; WOW64; rv:12.0) Gecko/20100101 Firefox/12.0'})
             resp = urllib2.urlopen(req)
+            resp.encoding = 'utf8'
             html = resp.read()
 
-
+            txt2 =''
             soup = BeautifulSoup(html,"html.parser")
             
+            #print soup.original_encoding
             txt = soup.findAll("div", {"itemprop":"articleBody"})
-            txt2 = ''
-           # txt = join('\n',txt))
-            pretxt = '---\nlayout: post\ntitle:  "chap1"\ndate:   2015-11-17 16:16:01 -0600\ncategories: rmji\n---\n'
-            lf = codecs.open(destname, "w", "utf-8")
-            #txt2 = txt.strip('[').strip(']')
-            #txt3 = txt2.replace('\\n','')
-            #txt4 = decode(
-            #lf.write(pretxt + txt3)
-            #txt2 = pretxt 
-            i = 1
             for line in txt:
+                txt2 = txt2 + line.prettify()
                  
-                 txt2 = txt2 + line
-
                  
-            md = markdown.markdown(txt2)
             
-            lf.write(pretxt + md)
+            pretxt = '---\nlayout: post\ntitle:  "'+ title + '"\ncategories: rmji\n---\n'
+            lf = codecs.open(destname, "w", encoding="utf-8")
+
+            #print type(txt)
+            #print type(unicode(txt))
+            #print type(lf)
+            
+            lf.write(unicode(txt2))
             lf.close()
+            filename = '2015-11-11-'+ title + '.markdown'
+            txt3 = pretxt + open("tempfile").read()
+            
+            txt4 = re.sub(r'(http://www.wuxiaworld.com/rmji-index/rmji-chapter-\d+)' , r'\1.html' , txt3)
+            txt5 = re.sub(r'http://www.wuxiaworld.com/rmji-index/' , r'' , txt4)
+            print ''
+            print type(txt4)
+            
+            open(filename, "w").write(txt5)
+
+            
+ 
+                
             
 
         except Exception, e:
             done += 1
             print str(done) + ' tries 1st '
             print str(e) + '1st'
-        print "Downloaded  2 %s" % name
+        #print "Downloaded  2 %s" % name
+        print "Downloaded :" + title
 
 
         #pa = '"download_list":\["(.+?)"'
 if __name__ == "__main__":
- #   args = sys.argv
- #   print args
- #   if len(args) >= 3:
-    link = 'http://www.wuxiaworld.com/rmji-index/rmji-chapter-2/'
-    dest = '.'
-    wpd = WeipanDownloader(link, dest)
- #   wpd.parse()
- #   wpd.downloadAll()
-    wpd.download(dest,'2012-09-12-rmji-chapter-1.markdown',link)
+    for chapnumber in range(1, 12):
+        
+        title = 'rmji-chapter-' + str(chapnumber)
+        link = 'http://www.wuxiaworld.com/rmji-index/' + title
+        dest = '.'
+        wpd = WeipanDownloader(link, dest)
+        wpd.download(dest,'tempfile',link)
+
+
+
+
+        
